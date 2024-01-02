@@ -1,32 +1,455 @@
-# Prerequisites
-*.d
+# Nokta sınıfı
+*Nokta.h
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
 
-# Precompiled Headers
-*.gch
-*.pch
+#ifndef NOKTA_H
+#define NOKTA_H
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+#include <string>
 
-# Fortran module files
-*.mod
-*.smod
+class Nokta {
+private:
+    double x;
+    double y;
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+public:
+    Nokta();
+    Nokta(double val);
+    Nokta(double x_val, double y_val);
+    Nokta(const Nokta& other);
+    Nokta(const Nokta& other, double ofset_x, double ofset_y);
+    double mesafe(const Nokta& diger) const {
+        double dx = x - diger.x;
+        double dy = y - diger.y;
+        return sqrt(dx * dx + dy * dy);
+    }
+    void setX(double x_val);
+    double getX() const;
+    void setY(double y_val);
+    double getY() const;
+    void set(double x_val, double y_val);
+    std::string toString() const;
+    void yazdir() const;
+};
 
-# Executables
-*.exe
-*.out
-*.app
+#endif // NOKTA_H
+
+
+
+# Nokta cpp dosyası
+*Nokta.cpp
+
+
+#include "Nokta.h"
+#include <iostream>
+
+using namespace std;
+
+Nokta::Nokta() : x(0.0), y(0.0) {}
+
+Nokta::Nokta(double val) : x(val), y(val) {}
+
+Nokta::Nokta(double x_val, double y_val) : x(x_val), y(y_val) {}
+
+Nokta::Nokta(const Nokta& other) : x(other.x), y(other.y) {}
+
+Nokta::Nokta(const Nokta& other, double ofset_x, double ofset_y) : x(other.x + ofset_x), y(other.y + ofset_y) {}
+
+void Nokta::setX(double x_val) { x = x_val; }
+double Nokta::getX() const { return x; }
+
+void Nokta::setY(double y_val) { y = y_val; }
+double Nokta::getY() const { return y; }
+
+void Nokta::set(double x_val, double y_val) {
+    x = x_val;
+    y = y_val;
+}
+
+string Nokta::toString() const {
+    return "(" + to_string(x) + ", " + to_string(y) + ")";
+}
+
+void Nokta::yazdir() const {
+    cout << "Koordinatlar: " << toString() << endl;
+}
+
+
+
+# Doğru Parçası sınıfı
+*DogruParcasi.h
+
+#ifndef DOGRUPARCASI_H
+#define DOGRUPARCASI_H
+
+#include "Nokta.h"
+
+class DogruParcasi {
+private:
+    Nokta p1;
+    Nokta p2;
+
+public:
+    DogruParcasi();
+    DogruParcasi(const Nokta& nokta1, const Nokta& nokta2);
+    DogruParcasi(const DogruParcasi& other);
+    DogruParcasi(const Nokta& ortaNokta, double uzunluk, double egim);
+
+    void setP1(const Nokta& nokta);
+    Nokta getP1() const;
+    void setP2(const Nokta& nokta);
+    Nokta getP2() const;
+
+    double uzunluk() const;
+    Nokta kesisimNoktasi(const Nokta& nokta) const;
+    Nokta ortaNokta() const;
+    std::string toString() const;
+    void yazdir() const;
+};
+
+#endif // DOGRUPARCASI_H
+
+
+# Doğru Parçası cpp dpsyası
+*DogruParcasi.cpp
+
+
+#include "DogruParcasi.h"
+#include <iostream>
+#include <cmath>
+#include "Nokta.h"
+
+using namespace std;
+
+DogruParcasi::DogruParcasi() : p1(Nokta()), p2(Nokta()) {}
+
+DogruParcasi::DogruParcasi(const Nokta& nokta1, const Nokta& nokta2) : p1(nokta1), p2(nokta2) {}
+
+DogruParcasi::DogruParcasi(const DogruParcasi& other) : p1(other.p1), p2(other.p2) {}
+
+DogruParcasi::DogruParcasi(const Nokta& ortaNokta, double uzunluk, double egim) {
+    double x2 = ortaNokta.getX() + uzunluk * cos(egim);
+    double y2 = ortaNokta.getY() + uzunluk * sin(egim);
+    p1.set(ortaNokta.getX() - (x2 - ortaNokta.getX()), ortaNokta.getY() - (y2 - ortaNokta.getY()));
+    p2.set(x2, y2);
+}
+
+void DogruParcasi::setP1(const Nokta& nokta) { p1 = nokta; }
+Nokta DogruParcasi::getP1() const { return p1; }
+void DogruParcasi::setP2(const Nokta& nokta) { p2 = nokta; }
+Nokta DogruParcasi::getP2() const { return p2; }
+
+double DogruParcasi::uzunluk() const {
+    double dx = p2.getX() - p1.getX();
+    double dy = p2.getY() - p1.getY();
+    return sqrt(dx * dx + dy * dy);
+}
+
+Nokta DogruParcasi::kesisimNoktasi(const Nokta& nokta) const {
+    // Dogru parçası p1 ile p2 arasındaki denklemi oluşturmak için iki nokta arasındaki doğru eğimi:
+    double egim_p1_p2 = (p2.getY() - p1.getY()) / (p2.getX() - p1.getX());
+
+    // Verilen noktadan doğruya dik olarak bir doğru denklemi oluşturur.
+    // Y = mX + C
+    // C = Y - mX
+    double egim_dik = -1 / egim_p1_p2; // Doğruya dik eğim
+    double c_dik = nokta.getY() - egim_dik * nokta.getX(); // Doğruya dik olan çizgi sabiti
+
+    // İki doğrunun kesişim noktasının X ve Y koordinatlarının hesaplandığı kısım:
+    // Y = mX + C ve Y = mX + C_dik
+    // mX + C = mX + C_dik
+    // C = C_dik
+    // mX = C_dik - C
+    // X = (C_dik - C) / (m)
+
+    double kesisim_x = (c_dik - 0) / (egim_p1_p2 - egim_dik); // X koordinatı
+    double kesisim_y = egim_p1_p2 * kesisim_x; // Y koordinatı
+
+    return Nokta(kesisim_x, kesisim_y); // Kesişim noktasını oluşturup döndürür
+}
+
+
+Nokta DogruParcasi::ortaNokta() const {
+    double ortaX = (p1.getX() + p2.getX()) / 2.0; // X için orta nokta hesabı 
+    double ortaY = (p1.getY() + p2.getY()) / 2.0; // Y için orta nokta hesabı
+    return Nokta(ortaX, ortaY);
+}
+
+string DogruParcasi::toString() const {
+    return "P1: " + p1.toString() + ", P2: " + p2.toString();
+}
+
+void DogruParcasi::yazdir() const {
+    cout << toString() << endl;
+}
+
+# Daire sınıfı
+*Daire.h
+
+#ifndef DAIRE_H
+#define DAIRE_H
+
+#include "Nokta.h"
+
+class Daire {
+private:
+    Nokta merkez;
+    double yaricap;
+
+public:
+    Daire();
+    Daire(const Nokta& merkez, double yaricap);
+    Daire(const Daire& other);
+    Daire(const Daire& other, double carpan);
+
+    double alan() const;
+    double cevre() const;
+    int kesisim(const Daire& diger) const;
+    std::string toString() const;
+    void yazdir() const;
+};
+
+#endif // DAIRE_H
+
+
+
+# Daire sınıfı cpp dosyası
+*Daire.cpp
+
+#include "Daire.h"
+#include <iostream>
+#include <cmath>
+#define M_PI 3.14159265358979323846
+#include "Nokta.h"
+
+using namespace std;
+
+Daire::Daire() : merkez(Nokta()), yaricap(0) {}
+
+Daire::Daire(const Nokta& merkez, double yaricap) : merkez(merkez), yaricap(yaricap) {}
+
+Daire::Daire(const Daire& other) : merkez(other.merkez), yaricap(other.yaricap) {}
+
+Daire::Daire(const Daire& other, double carpan) : merkez(other.merkez), yaricap(other.yaricap* carpan) {}
+
+double Daire::alan() const {
+    return M_PI * yaricap * yaricap; // pi*r^2lan hesabı 
+}
+
+double Daire::cevre() const {
+    return 2 * M_PI * yaricap;  // 2*pi*r çevre hesabı
+}
+
+int Daire::kesisim(const Daire& diger) const {
+    double merkez_mesafe = sqrt(pow((diger.merkez.getX() - merkez.getX()), 2) + pow((diger.merkez.getY() - merkez.getY()), 2));
+    if (merkez_mesafe < abs(diger.yaricap - yaricap))
+        return 0; // daieler iç içe
+    else if (merkez_mesafe == abs(diger.yaricap - yaricap))
+        return 1; // teğet
+    else
+        return 2; // kesişim yok
+}
+
+string Daire::toString() const {
+    return "Merkez: " + merkez.toString() + ", Yaricap: " + to_string(yaricap);
+}
+
+void Daire::yazdir() const {
+    cout << toString() << endl;
+}
+
+
+# Üçgen sınıfı 
+*Ucgen.h
+
+#ifndef UCGEN_H
+#define UCGEN_H
+
+#include "Nokta.h"
+#include "DogruParcasi.h"
+
+class Ucgen {
+private:
+    Nokta nokta1;
+    Nokta nokta2;
+    Nokta nokta3;
+
+public:
+    Ucgen(const Nokta& n1, const Nokta& n2, const Nokta& n3);
+
+    void setNokta1(const Nokta& nokta);
+    Nokta getNokta1() const;
+    void setNokta2(const Nokta& nokta);
+    Nokta getNokta2() const;
+    void setNokta3(const Nokta& nokta);
+    Nokta getNokta3() const;
+
+    std::string toString() const;
+    double alan() const;
+    double cevre() const;
+    double* acilar() const;
+};
+
+#endif // UCGEN_H
+
+
+
+# Üçgen sınıfı cpp dosyası
+*Ucgen.cpp
+
+#include "Ucgen.h"
+#include <cmath>
+#define M_PI 3.14159265358979323846
+#include "Nokta.h"
+ 
+using namespace std;
+
+Ucgen::Ucgen(const Nokta& n1, const Nokta& n2, const Nokta& n3)
+    : nokta1(n1), nokta2(n2), nokta3(n3) {}
+
+void Ucgen::setNokta1(const Nokta& nokta) { nokta1 = nokta; }
+Nokta Ucgen::getNokta1() const { return nokta1; }
+void Ucgen::setNokta2(const Nokta& nokta) { nokta2 = nokta; }
+Nokta Ucgen::getNokta2() const { return nokta2; }
+void Ucgen::setNokta3(const Nokta& nokta) { nokta3 = nokta; }
+Nokta Ucgen::getNokta3() const { return nokta3; }
+
+string Ucgen::toString() const {
+    return "Üçgen; Nokta1: " + nokta1.toString() + ", Nokta2: " + nokta2.toString() + ", Nokta3: " + nokta3.toString();
+}
+
+double Ucgen::alan() const {
+    double a = nokta1.mesafe(nokta2);
+    double b = nokta2.mesafe(nokta3);
+    double c = nokta3.mesafe(nokta1);
+    double s = (a + b + c) / 2; // Üçgenin yarı çevresi
+
+    return sqrt(s * (s - a) * (s - b) * (s - c));
+}
+
+double Ucgen::cevre() const {
+    double cevre = 0.0;
+
+    DogruParcasi dp1(nokta1, nokta2);
+    DogruParcasi dp2(nokta2, nokta3);
+    DogruParcasi dp3(nokta3, nokta1);
+
+    cevre += dp1.uzunluk();
+    cevre += dp2.uzunluk();
+    cevre += dp3.uzunluk();
+
+    return cevre;
+}
+
+double* Ucgen::acilar() const {
+
+    double* aciDizisi = new double[3]; // 3 elemanlı bir dizi
+
+    double a = nokta1.mesafe(nokta2);
+    double b = nokta2.mesafe(nokta3);
+    double c = nokta3.mesafe(nokta1);
+
+    double acosA = acos((b * b + c * c - a * a) / (2 * b * c)); // Açıların kosinüslerini bulmak için kosinüs teoremi
+    double acosB = acos((c * c + a * a - b * b) / (2 * c * a));
+    double acosC = acos((a * a + b * b - c * c) / (2 * a * b));
+
+    aciDizisi[0] = acosA * 180 / M_PI; // Radyanı dereceye çevirir
+    aciDizisi[1] = acosB * 180 / M_PI;
+    aciDizisi[2] = acosC * 180 / M_PI;
+
+    return aciDizisi;
+}
+
+# test kodu
+*Test.cpp
+
+
+#include "DogruParcasi.h"
+#include "Daire.h"
+#include "Ucgen.h"
+#include <locale>
+#include "Nokta.h"
+#include <iostream>
+using namespace std;
+
+// Test kodu
+int main() {
+    setlocale(LC_ALL, "Turkish");
+    //Nokta
+    cout << "NOKTA SINIFI İÇİN TEST ÇIKTILARI:" << endl;
+    Nokta n1;
+    Nokta n2(5);
+    Nokta n3(3, 4);
+    Nokta n4(n3);
+    Nokta n5(n3, 1, -1);
+
+    cout << "Oluşturulan 5 noktanın x ve y değerleri:" << endl;
+    n1.yazdir();
+    n2.yazdir();
+    n3.yazdir();
+    n4.yazdir();
+    n5.yazdir();
+
+    cout << "1. ve 2. noktaların güncel x ve y değerleri:" << endl;
+    n1.setX(10);
+    n1.yazdir();
+    n2.set(25, 30);
+    n2.yazdir();
+
+    //Dogru Parcasi
+    cout << endl << "DOGRUPARCASI SINIFI İÇİN TEST SONUÇLARI:" << endl;
+    Nokta n11;
+    Nokta n21(3, 4);
+    DogruParcasi dp(n11, n21);
+    DogruParcasi dp2(dp);
+    DogruParcasi dp3(n21, 10, 45);
+
+    cout << "Oluşturulan 3 doğru parçasının başlangıç ve bitiş noktaları:" << endl;
+    dp.yazdir();
+    dp2.yazdir();
+    dp3.yazdir();
+
+    cout << "2. doğru parçasının başlangıç ve bitiş noktaları:" << endl;
+    dp2.setP1(Nokta());
+    dp2.yazdir();
+
+    cout << "1. doğru parçası için uzunluk değeri: " << dp.uzunluk() << endl;
+    cout << "1. doğru parçası içib orta nokta: " << dp.ortaNokta().toString() << endl;
+
+    //Daire
+    cout << endl << "DAIRE SINIFI İÇİN TEST SONUÇLARI:" << endl;
+    Nokta merkez1(0, 0);
+    Daire d1(merkez1, 5);
+    Daire d2(d1);
+    Daire d3(d2, 3);
+
+    cout << "Daire 1: ";
+    d1.yazdir();
+    cout << "Alan: " << d1.alan() << ", Çevre: " << d1.cevre() << endl;
+
+    cout << "Daire 2: ";
+    d2.yazdir();
+    cout << "Alan: " << d2.alan() << ", Çevre: " << d2.cevre() << endl;
+
+    cout << "Daire 3: ";
+    d3.yazdir();
+    cout << "Alan: " << d3.alan() << ", Çevre: " << d3.cevre() << endl;
+
+    cout << "Daire 1 ve Daire 2 Kesişim Durumu: " << d1.kesisim(d2) << endl;
+    cout << "Daire 1 ve Daire 3 Kesişim Durumu: " << d1.kesisim(d3) << endl;
+
+    //Ucgen
+    cout << endl << "UCGEN SINIFI İÇİN TEST SONUÇLARI:" << endl;
+    Ucgen ucgen(Nokta(0, 0), Nokta(4, 0), Nokta(0, 3));
+
+    cout << ucgen.toString() << endl;
+    cout << "Alan: " << ucgen.alan() << endl;
+    cout << "Çevre: " << ucgen.cevre() << endl;
+
+    double* acilar = ucgen.acilar();
+    cout << "Açılar: " << acilar[0] << ", " << acilar[1] << ", " << acilar[2] << endl;
+
+
+    return 0;
+}
+
